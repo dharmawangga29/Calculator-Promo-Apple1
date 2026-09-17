@@ -83,13 +83,56 @@ main{padding:14px}
 const DEFAULT_CALC_PASSWORD='maptech';
 const ADMIN_USER='MAPTECH';
 const ADMIN_PASSWORD='digiceria';
+const SESSION_DURATION_MS=15*60*1000;
+let autoLogoutTimer=null;
 function getCalcPassword(){return localStorage.getItem('maptech_calc_password')||DEFAULT_CALC_PASSWORD}
-function doLogin(){const val=document.getElementById('loginPassword').value;const err=document.getElementById('loginError');if(val===getCalcPassword()){sessionStorage.setItem('maptech_logged_in','1');document.getElementById('loginOverlay').style.display='none';err.textContent='';}else{err.textContent='Password salah.'}}
+function setLoginSession(){
+  sessionStorage.setItem('maptech_logged_in','1');
+  sessionStorage.setItem('maptech_login_at',String(Date.now()));
+  scheduleAutoLogout();
+}
+function clearLoginSession(){
+  sessionStorage.removeItem('maptech_logged_in');
+  sessionStorage.removeItem('maptech_login_at');
+  if(autoLogoutTimer){clearTimeout(autoLogoutTimer);autoLogoutTimer=null;}
+}
+function showLoginOverlay(message=''){
+  document.getElementById('loginOverlay').style.display='flex';
+  document.getElementById('loginPassword').value='';
+  document.getElementById('loginError').textContent=message;
+}
+function logoutCalculator(message='Sesi berakhir. Silakan login kembali.'){
+  clearLoginSession();
+  showLoginOverlay(message);
+}
+function scheduleAutoLogout(){
+  if(autoLogoutTimer)clearTimeout(autoLogoutTimer);
+  const loginAt=Number(sessionStorage.getItem('maptech_login_at')||0);
+  if(!loginAt)return;
+  const remaining=SESSION_DURATION_MS-(Date.now()-loginAt);
+  if(remaining<=0){logoutCalculator('Sesi 15 menit telah berakhir. Silakan login kembali.');return;}
+  autoLogoutTimer=setTimeout(()=>logoutCalculator('Sesi 15 menit telah berakhir. Silakan login kembali.'),remaining);
+}
+function doLogin(){const val=document.getElementById('loginPassword').value;const err=document.getElementById('loginError');if(val===getCalcPassword()){setLoginSession();document.getElementById('loginOverlay').style.display='none';err.textContent='';}else{err.textContent='Password salah.'}}
 function openAdminLogin(){document.getElementById('adminPanel').style.display='flex';document.getElementById('adminEditor').style.display='none';document.getElementById('adminError').textContent='';document.getElementById('adminPass').value='';}
 function doAdminLogin(){const u=document.getElementById('adminUser').value.trim();const p=document.getElementById('adminPass').value;const err=document.getElementById('adminError');if(u===ADMIN_USER&&p===ADMIN_PASSWORD){document.getElementById('adminEditor').style.display='block';err.textContent='';}else{err.textContent='Username atau password admin salah.'}}
-function saveCalcPassword(){const p1=document.getElementById('newCalcPass').value;const p2=document.getElementById('newCalcPass2').value;const err=document.getElementById('adminError');if(!p1||p1.length<4){err.textContent='Password minimal 4 karakter.';return}if(p1!==p2){err.textContent='Konfirmasi password tidak sama.';return}localStorage.setItem('maptech_calc_password',p1);sessionStorage.setItem('maptech_logged_in','1');document.getElementById('adminPanel').style.display='none';document.getElementById('loginOverlay').style.display='none';document.getElementById('loginPassword').value='';alert('Password kalkulator berhasil diubah.');}
+function saveCalcPassword(){const p1=document.getElementById('newCalcPass').value;const p2=document.getElementById('newCalcPass2').value;const err=document.getElementById('adminError');if(!p1||p1.length<4){err.textContent='Password minimal 4 karakter.';return}if(p1!==p2){err.textContent='Konfirmasi password tidak sama.';return}localStorage.setItem('maptech_calc_password',p1);setLoginSession();document.getElementById('adminPanel').style.display='none';document.getElementById('loginOverlay').style.display='none';document.getElementById('loginPassword').value='';alert('Password kalkulator berhasil diubah. Sesi login akan otomatis berakhir setelah 15 menit.');}
 function closeAdminPanel(){document.getElementById('adminPanel').style.display='none'}
-function enforceLogin(){if(sessionStorage.getItem('maptech_logged_in')==='1'){document.getElementById('loginOverlay').style.display='none';}}
+function enforceLogin(){
+  const loggedIn=sessionStorage.getItem('maptech_logged_in')==='1';
+  const loginAt=Number(sessionStorage.getItem('maptech_login_at')||0);
+  if(loggedIn&&loginAt){
+    const remaining=SESSION_DURATION_MS-(Date.now()-loginAt);
+    if(remaining>0){
+      document.getElementById('loginOverlay').style.display='none';
+      scheduleAutoLogout();
+      return;
+    }
+  }
+  clearLoginSession();
+  showLoginOverlay('Silakan masukkan password untuk memulai sesi 15 menit.');
+}
+enforceLogin();
 let DATA=null;
 let state={tab:'iPhone',group:'',connectivity:'',storage:'',tradeBrand:'',tradeModel:'',tradeGrade:'',tradein:0,payment:'financing',financing:'',dp:0,admin:0,tenor:3,card:'',qoala:'',provider:'',providerItem:'',promo:''};
 const IDR=n=>new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(Math.round(Number(n)||0));
