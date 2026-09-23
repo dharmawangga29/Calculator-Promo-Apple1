@@ -21,15 +21,20 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Run Sync Google Sheet Script
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Run Sync Google Sheet & Rebuild HTML
         env:
           GOOGLE_SHEET_URL: ${{ secrets.GOOGLE_SHEET_URL }}
         run: |
           python scripts/sync_google_drive.py
 
-      - name: Commit and Push Updated Data
+      - name: Commit and Push Updated Data & HTML
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add public/data.json data.json index.html public/index.html
-          git diff-index --quiet HEAD || (git commit -m "auto: update promo data from Google Sheet [skip ci]" && git push)
+          git diff-index --quiet HEAD || (git commit -m "auto: update promo data and rebuild index.html [skip ci]" && git push)
