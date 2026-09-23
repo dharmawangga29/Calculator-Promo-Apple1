@@ -1,11 +1,10 @@
-name: Update Promo Google Drive
+name: Update Promo Google Sheet
 
 on:
   schedule:
     - cron: '0 * * * *' # Menjalankan otomatis setiap 1 jam
   workflow_dispatch: # Memungkinkan eksekusi manual dari tab Actions GitHub
 
-# Izin menulis agar GitHub Action dapat menyimpan (push) perubahan file
 permissions:
   contents: write
 
@@ -22,14 +21,9 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Install Dependencies
-        run: |
-          python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-
-      - name: Run Sync Google Drive Script
+      - name: Run Sync Google Sheet Script
         env:
-          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+          GOOGLE_SHEET_URL: ${{ secrets.GOOGLE_SHEET_URL }}
         run: |
           python scripts/sync_google_drive.py
 
@@ -38,4 +32,4 @@ jobs:
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add public/data.json data.json index.html public/index.html
-          git diff-index --quiet HEAD || (git commit -m "auto: update promo data from Google Drive [skip ci]" && git push)
+          git diff-index --quiet HEAD || (git commit -m "auto: update promo data from Google Sheet [skip ci]" && git push)
