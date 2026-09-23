@@ -1,145 +1,286 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kalkulator Penjualan & Trade-In</title>
-  <style>
-    body { font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 20px; background-color: #f4f6f8; }
-    #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 999; }
-    .login-card { background: #fff; padding: 24px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); width: 300px; text-align: center; }
-    .login-card input { width: 100%; padding: 8px; margin: 12px 0; box-sizing: border-box; }
-    .login-card button { width: 100%; padding: 10px; background: #007bff; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
-    .error-msg { color: #dc3545; font-size: 0.875rem; margin-top: 8px; }
-    #app { max-width: 800px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator Promo Apple</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+    </style>
 </head>
-<body>
+<body class="bg-gray-100 text-gray-800 min-h-screen p-4 md:p-8">
+    <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
+        <!-- Header -->
+        <div class="bg-black text-white p-6 text-center">
+            <h1 class="text-2xl font-bold tracking-wide">Kalkulator Promo Apple</h1>
+            <p class="text-xs text-gray-400 mt-1">Hitung simulasi harga promo, trade-in, protection & bank cashback</p>
+        </div>
 
-  <!-- Overlay Login -->
-  <div id="loginOverlay">
-    <div class="login-card">
-      <h3>Masuk Kalkulator</h3>
-      <input type="password" id="loginPassword" placeholder="Masukkan Password">
-      <button onclick="doLogin()">MASUK</button>
-      <div id="loginError" class="error-msg"></div>
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-6 p-6">
+            <!-- Form Input -->
+            <div class="md:col-span-7 space-y-4">
+                <!-- 1. Pilih Produk -->
+                <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                    <h2 class="font-semibold text-sm text-gray-600 mb-3 uppercase tracking-wider">1. Pilih Produk Apple</h2>
+                    <div class="grid grid-cols-2 gap-3 mb-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Kategori</label>
+                            <select id="select-category" class="w-full bg-white border border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-black">
+                                <option value="iPhone">iPhone</option>
+                                <option value="iPad">iPad</option>
+                                <option value="Apple Watch">Apple Watch</option>
+                                <option value="Mac">Mac</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Perangkat</label>
+                            <select id="select-item" class="w-full bg-white border border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-black">
+                                <option value="">-- Pilih Model --</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Trade In / Tukar Tambah -->
+                <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                    <div class="flex items-center justify-between mb-3">
+                        <h2 class="font-semibold text-sm text-gray-600 uppercase tracking-wider">2. Trade-In (Opsional)</h2>
+                        <input type="checkbox" id="enable-tradein" class="w-4 h-4 text-black rounded focus:ring-black">
+                    </div>
+                    <div id="tradein-fields" class="space-y-3 hidden">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 mb-1">Brand HP Lama</label>
+                                <select id="select-trade-brand" class="w-full bg-white border border-gray-300 rounded-lg p-2 text-sm">
+                                    <option value="">-- Pilih Brand --</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 mb-1">Model HP Lama</label>
+                                <select id="select-trade-model" class="w-full bg-white border border-gray-300 rounded-lg p-2 text-sm">
+                                    <option value="">-- Pilih Model --</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Kondisi / Grade</label>
+                            <select id="select-trade-grade" class="w-full bg-white border border-gray-300 rounded-lg p-2 text-sm">
+                                <option value="S">Grade S (Sempurna / Like New)</option>
+                                <option value="A">Grade A (Mulus / Fungsi Normal)</option>
+                                <option value="B">Grade B (Lecet Halus)</option>
+                                <option value="C">Grade C (Lecet Pemakaian)</option>
+                                <option value="D">Grade D (Ada Minus Bodi/Layar)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Add-on & Bank Promo -->
+                <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-3">
+                    <h2 class="font-semibold text-sm text-gray-600 uppercase tracking-wider">3. Perlindungan & Bank</h2>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Perlindungan Qoala</label>
+                        <select id="select-qoala" class="w-full bg-white border border-gray-300 rounded-lg p-2 text-sm">
+                            <option value="0">Tanpa Qoala</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Promo Bank / Provider</label>
+                        <select id="select-provider" class="w-full bg-white border border-gray-300 rounded-lg p-2 text-sm">
+                            <option value="0">Tanpa Promo Bank</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rincian Harga / Ringkasan -->
+            <div class="md:col-span-5 bg-gray-900 text-white p-6 rounded-xl flex flex-col justify-between">
+                <div>
+                    <h2 class="text-lg font-bold border-b border-gray-800 pb-3 mb-4">Rincian Pembayaran</h2>
+                    <div class="space-y-3 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Harga Normal</span>
+                            <span id="res-normal" class="font-medium">Rp0</span>
+                        </div>
+                        <div class="flex justify-between text-green-400">
+                            <span>Diskon Promo</span>
+                            <span id="res-discount">-Rp0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Harga Promo</span>
+                            <span id="res-promo" class="font-semibold">Rp0</span>
+                        </div>
+                        <div class="flex justify-between text-yellow-400">
+                            <span>Nilai Trade-In</span>
+                            <span id="res-tradein">-Rp0</span>
+                        </div>
+                        <div class="flex justify-between text-blue-400">
+                            <span>Biaya Qoala</span>
+                            <span id="res-qoala">+Rp0</span>
+                        </div>
+                        <div class="flex justify-between text-green-400">
+                            <span>Potongan Bank</span>
+                            <span id="res-bank">-Rp0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 border-t border-gray-800 pt-4">
+                    <span class="text-xs text-gray-400 block mb-1">Total Pembayaran Akhir</span>
+                    <div id="res-final" class="text-3xl font-extrabold text-white">Rp0</div>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <!-- Main Application -->
-  <main id="app">
-    <p>Memuat data...</p>
-  </main>
+    <script>
+        // Inject Data dari Python Script
+        const DATA = JSON.parse('{"catalog":{"iPhone":[],"iPad":[],"Apple Watch":[],"Mac":[]},"qoala":[],"providers":[],"trade_in":[]}');
 
-  <script>
-    // DATA didefinisikan sebagai Objek JS langsung untuk menghindari error JSON.parse & escaping quote
-    const DATA = {
-      catalog: [
-        { id: 1, group: 'IPAD PRO M5 11"', brand: "apple", model: 'ipad pro m5 11" 128gb', price: 15000000 },
-        { id: 2, group: 'INFINIX SMART', brand: "infinix", model: "infinix smart 20 64gb", price: 1200000 }
-      ],
-      qoala: [
-        { min: 0, max: 5000000, fee: 150000 },
-        { min: 5000001, max: 20000000, fee: 300000 }
-      ],
-      providers: [
-        { name: "Provider A", rate: 0.015 }
-      ],
-      trade_in: [
-        { brand: "infinix", model: "infinix smart 20 64gb", value: 800000 }
-      ],
-      card_options: [
-        { bank: "BCA", tenure: 12, rate: 0 }
-      ],
-      bnpl: [
-        { name: "Kredivo", admin: 50000, interestRate: 0.026 }
-      ],
-      promos: [
-        { code: "PROMO100", discount: 100000 }
-      ]
-    };
+        const formatIDR = (num) => "Rp" + Math.max(0, num).toLocaleString("id-ID");
 
-    const CALC_PASSWORD = "123";
+        const elCategory = document.getElementById("select-category");
+        const elItem = document.getElementById("select-item");
+        const elEnableTradein = document.getElementById("enable-tradein");
+        const elTradeinFields = document.getElementById("tradein-fields");
+        const elTradeBrand = document.getElementById("select-trade-brand");
+        const elTradeModel = document.getElementById("select-trade-model");
+        const elTradeGrade = document.getElementById("select-trade-grade");
+        const elQoala = document.getElementById("select-qoala");
+        const elProvider = document.getElementById("select-provider");
 
-    function getCalcPassword() {
-      return CALC_PASSWORD;
-    }
+        function init() {
+            renderCatalogItems();
+            renderTradeBrands();
+            renderQoalaOptions();
+            renderProviderOptions();
+            calculate();
+        }
 
-    function setLoginSession() {
-      localStorage.setItem('isLoggedIn', 'true');
-    }
+        elCategory.addEventListener("change", () => {
+            renderCatalogItems();
+            calculate();
+        });
 
-    function isSessionActive() {
-      return localStorage.getItem('isLoggedIn') === 'true';
-    }
+        elItem.addEventListener("change", calculate);
 
-    function doLogin() {
-      const val = document.getElementById('loginPassword').value;
-      const err = document.getElementById('loginError');
-      if (val === getCalcPassword()) {
-        setLoginSession();
-        document.getElementById('loginOverlay').style.display = 'none';
-        err.textContent = '';
-        render(); // Pemanggilan render() setelah login berhasil
-      } else {
-        err.textContent = 'Password salah.';
-      }
-    }
+        elEnableTradein.addEventListener("change", (e) => {
+            if (e.target.checked) {
+                elTradeinFields.classList.remove("hidden");
+            } else {
+                elTradeinFields.classList.add("hidden");
+            }
+            calculate();
+        });
 
-    function enforceLogin() {
-      if (isSessionActive()) {
-        document.getElementById('loginOverlay').style.display = 'none';
-        render(); // Pemanggilan render() jika sesi sudah aktif
-      } else {
-        document.getElementById('loginOverlay').style.display = 'flex';
-      }
-    }
+        elTradeBrand.addEventListener("change", () => {
+            renderTradeModels();
+            calculate();
+        });
 
-    function quote(params = {}) {
-      const state = {
-        payment: params.payment || 'financing',
-        bnplName: params.bnplName || 'Kredivo',
-        amount: params.amount || 1000000,
-        months: params.months || 12
-      };
+        elTradeModel.addEventListener("change", calculate);
+        elTradeGrade.addEventListener("change", calculate);
+        elQoala.addEventListener("change", calculate);
+        elProvider.addEventListener("change", calculate);
 
-      const b = DATA.bnpl.find(item => item.name === state.bnplName) || { admin: 0, interestRate: 0 };
-      
-      // Perbaikan perhitungan biaya admin dan typo
-      const adminFee = state.payment === 'financing' ? b.admin : 0;
-      const monthlyBase = state.amount / state.months;
-      const interest = state.amount * b.interestRate;
-      const monthlyAll = monthlyBase + interest + (adminFee / state.months);
+        function renderCatalogItems() {
+            const cat = elCategory.value;
+            const items = DATA.catalog[cat] || [];
+            elItem.innerHTML = '<option value="">-- Pilih Model --</option>';
+            items.forEach((item, idx) => {
+                const opt = document.createElement("option");
+                opt.value = idx;
+                opt.textContent = `${item.description} (${item.memory_label}) - ${formatIDR(item.promo_price)}`;
+                elItem.appendChild(opt);
+            });
+        }
 
-      return {
-        monthlyAll: Math.round(monthlyAll),
-        adminFee: adminFee
-      };
-    }
+        function renderTradeBrands() {
+            const brands = [...new Set(DATA.trade_in.map(t => t.brand))];
+            elTradeBrand.innerHTML = '<option value="">-- Pilih Brand --</option>';
+            brands.forEach(b => {
+                if (b) {
+                    const opt = document.createElement("option");
+                    opt.value = b;
+                    opt.textContent = b.toUpperCase();
+                    elTradeBrand.appendChild(opt);
+                }
+            });
+        }
 
-    function render() {
-      const app = document.getElementById('app');
-      const sampleQuote = quote({ amount: 5000000, months: 6 });
+        function renderTradeModels() {
+            const brand = elTradeBrand.value;
+            const filtered = DATA.trade_in.filter(t => t.brand === brand);
+            elTradeModel.innerHTML = '<option value="">-- Pilih Model --</option>';
+            filtered.forEach((item, idx) => {
+                const opt = document.createElement("option");
+                opt.value = idx;
+                opt.textContent = item.model.toUpperCase();
+                elTradeModel.appendChild(opt);
+            });
+        }
 
-      let catalogHtml = DATA.catalog.map(item => `
-        <li><strong>${item.brand.toUpperCase()}</strong> - ${item.model} (Rp ${item.price.toLocaleString('id-ID')})</li>
-      `).join('');
+        function renderQoalaOptions() {
+            elQoala.innerHTML = '<option value="0">Tanpa Qoala Protection</option>';
+            DATA.qoala.forEach((q, idx) => {
+                const opt = document.createElement("option");
+                opt.value = q.current;
+                opt.textContent = `${q.description} (+${formatIDR(q.current)})`;
+                elQoala.appendChild(opt);
+            });
+        }
 
-      app.innerHTML = `
-        <h2>Kalkulator Penjualan & Simulasi</h2>
-        <hr>
-        <h3>Katalog Produk</h3>
-        <ul>${catalogHtml}</ul>
-        <hr>
-        <h3>Simulasi Angsuran</h3>
-        <p>Estimasi Angsuran / Bulan: <strong>Rp ${sampleQuote.monthlyAll.toLocaleString('id-ID')}</strong></p>
-      `;
-    }
+        function renderProviderOptions() {
+            elProvider.innerHTML = '<option value="0">Tanpa Promo Bank</option>';
+            DATA.providers.forEach((p, idx) => {
+                const opt = document.createElement("option");
+                opt.value = p.current;
+                opt.textContent = `${p.brand} - ${p.description} (-${formatIDR(p.current)})`;
+                elProvider.appendChild(opt);
+            });
+        }
 
-    // Inisialisasi pemeriksaan login saat halaman dimuat
-    document.addEventListener('DOMContentLoaded', () => {
-      enforceLogin();
-    });
-  </script>
+        function calculate() {
+            const cat = elCategory.value;
+            const itemIdx = elItem.value;
+            
+            let normalPrice = 0;
+            let promoPrice = 0;
+
+            if (itemIdx !== "" && DATA.catalog[cat] && DATA.catalog[cat][itemIdx]) {
+                const item = DATA.catalog[cat][itemIdx];
+                normalPrice = item.normal_price || 0;
+                promoPrice = item.promo_price || 0;
+            }
+
+            let tradeVal = 0;
+            if (elEnableTradein.checked && elTradeBrand.value !== "" && elTradeModel.value !== "") {
+                const brand = elTradeBrand.value;
+                const filtered = DATA.trade_in.filter(t => t.brand === brand);
+                const selectedModel = filtered[elTradeModel.value];
+                if (selectedModel && selectedModel.grades) {
+                    const grade = elTradeGrade.value;
+                    tradeVal = selectedModel.grades[grade] || 0;
+                }
+            }
+
+            const qoalaVal = parseFloat(elQoala.value) || 0;
+            const bankVal = parseFloat(elProvider.value) || 0;
+            const discountVal = Math.max(0, normalPrice - promoPrice);
+
+            const finalPrice = Math.max(0, promoPrice - tradeVal + qoalaVal - bankVal);
+
+            document.getElementById("res-normal").textContent = formatIDR(normalPrice);
+            document.getElementById("res-discount").textContent = `-${formatIDR(discountVal)}`;
+            document.getElementById("res-promo").textContent = formatIDR(promoPrice);
+            document.getElementById("res-tradein").textContent = `-${formatIDR(tradeVal)}`;
+            document.getElementById("res-qoala").textContent = `+${formatIDR(qoalaVal)}`;
+            document.getElementById("res-bank").textContent = `-${formatIDR(bankVal)}`;
+            document.getElementById("res-final").textContent = formatIDR(finalPrice);
+        }
+
+        init();
+    </script>
 </body>
 </html>
