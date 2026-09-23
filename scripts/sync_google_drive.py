@@ -1,118 +1,43 @@
-#!/usr/bin/env python3
-"""Download Calculator Promo.xlsx from Google Drive using a service account.
-
-GitHub Actions inputs (environment variables):
-  GOOGLE_SERVICE_ACCOUNT_JSON_BASE64  Base64-encoded service-account JSON
-  GOOGLE_DRIVE_FILE_ID                 Google Drive file ID for the XLSX
-  DOWNLOAD_PATH                        Output path (default: Calculator Promo.xlsx)
-
-The Google Drive file must be shared with the service account's email address
-with at least Viewer permission.
-"""
-
-from __future__ import annotations
-
-import base64
-import json
 import os
-import sys
-from pathlib import Path
+import json
+import csv
+import urllib.request
 
-import requests
-from google.oauth2 import service_account
-from google.auth.transport.requests import Request
+# Mengambil URL Google Sheet dari Secret/Environment Variable
+SHEET_URL = os.environ.get("GOOGLE_SHEET_URL")
 
-DRIVE_API = "https://www.googleapis.com/drive/v3"
-SCOPES = ["https://www.googleapis.com/auth/drive.readonly"]
+if not SHEET_URL:
+    raise ValueError("Missing required environment variable: GOOGLE_SHEET_URL")
 
+# Mengubah link edit/view standar menjadi link export CSV otomatis jika diperlukan
+if "/edit" in SHEET_URL or "/view" in SHEET_URL:
+    sheet_id = SHEET_URL.split("/d/")[1].split("/")[0]
+    SHEET_URL = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv"
 
-def required(name: str) -> str:
-    value = os.getenv(name, "").strip()
-    if not value:
-        raise SystemExit(f"Missing required environment variable: {name}")
-    return value
+print(f"Fetching data from Google Sheet...")
 
-
-def load_service_account_credentials():
-    raw_b64 = required("GOOGLE_SERVICE_ACCOUNT_JSON_BASE64")
-    try:
-        raw_json = base64.b64decode(raw_b64).decode("utf-8")
-        info = json.loads(raw_json)
-    except Exception as exc:
-        raise SystemExit(f"Invalid GOOGLE_SERVICE_ACCOUNT_JSON_BASE64: {exc}") from exc
-
-    if info.get("type") != "service_account":
-        raise SystemExit("The supplied Google credential is not a service-account JSON file.")
-
-    creds = service_account.Credentials.from_service_account_info(info, scopes=SCOPES)
-    creds.refresh(Request())
-    return creds
-
-
-def download() -> Path:
-    file_id = required("GOOGLE_DRIVE_FILE_ID")
-    output = Path(os.getenv("DOWNLOAD_PATH", "Calculator Promo.xlsx"))
-    output.parent.mkdir(parents=True, exist_ok=True)
-
-    creds = load_service_account_credentials()
-    headers = {"Authorization": f"Bearer {creds.token}"}
-
-    # First read metadata so errors are easier to diagnose.
-    meta_url = f"{DRIVE_API}/files/{file_id}"
-    meta = requests.get(
-        meta_url,
-        headers=headers,
-        params={"fields": "id,name,mimeType,size,modifiedTime"},
-        timeout=60,
+try:
+    req = urllib.request.Request(
+        SHEET_URL, 
+        headers={'User-Agent': 'Mozilla/5.0'}
     )
-    if not meta.ok:
-        raise SystemExit(
-            f"Google Drive metadata request failed ({meta.status_code}): {meta.text[:1000]}"
-        )
+    
+    with urllib.request.urlopen(req) as response:
+        csv_text = response.read().decode('utf-8').splitlines()
 
-    metadata = meta.json()
-    print(
-        "Google Drive file:",
-        metadata.get("name"),
-        "| MIME:", metadata.get("mimeType"),
-        "| modified:", metadata.get("modifiedTime"),
-    )
+    reader = csv.DictReader(csv_text)
+    data = [row for row in reader]
 
-    if metadata.get("mimeType") != "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
-        raise SystemExit(
-            "The Drive file is not an XLSX blob. Use an uploaded .xlsx file, not a native Google Sheets file."
-        )
+    os.makedirs("public", exist_ok=True)
 
-    content_url = f"{DRIVE_API}/files/{file_id}"
-    resp = requests.get(
-        content_url,
-        headers=headers,
-        params={"alt": "media"},
-        timeout=180,
-    )
-    if not resp.ok:
-        raise SystemExit(
-            f"Google Drive download failed ({resp.status_code}): {resp.text[:1000]}"
-        )
+    with open("public/data.json", "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
 
-    content = resp.content
-    if len(content) < 1000 or content[:2] != b"PK":
-        raise SystemExit(
-            "Downloaded content does not look like a valid .xlsx file. "
-            f"content-type={resp.headers.get('content-type')!r}, size={len(content)} bytes"
-        )
+    with open("data.json", "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
 
-    tmp = output.with_suffix(output.suffix + ".tmp")
-    tmp.write_bytes(content)
-    tmp.replace(output)
+    print("Data successfully synced to public/data.json and data.json")
 
-    print(f"Downloaded: {output} ({len(content):,} bytes)")
-    return output
-
-
-if __name__ == "__main__":
-    try:
-        download()
-    except requests.RequestException as exc:
-        print(f"Network error: {exc}", file=sys.stderr)
-        raise SystemExit(2)
+except Exception as e:
+    print(f"Error fetching Google Sheet data: {e}")
+    exit(1)
