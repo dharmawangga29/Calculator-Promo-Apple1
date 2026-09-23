@@ -1,23 +1,37 @@
-#!/usr/bin/env python3
-"""Build a Netlify-ready static package from Calculator Promo.xlsx.
+import json
+import os
+import calculator_promo_server
 
-The workbook remains the master source. Running this script regenerates data.json
-and copies index.html + required files into public/.
-"""
-import os, shutil, json
-from calculator_promo_server import load_data
+# Fungsi untuk membaca data dari data.json (hasil sync Google Sheet)
+def load_data_from_json():
+    json_path = "public/data.json" if os.path.exists("public/data.json") else "data.json"
+    if not os.path.exists(json_path):
+        raise FileNotFoundError(f"File {json_path} tidak ditemukan!")
+    with open(json_path, "r", encoding="utf-8") as f:
+        return json.load(f)
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-PUBLIC_DIR = os.path.join(BASE_DIR, 'public')
-os.makedirs(PUBLIC_DIR, exist_ok=True)
+# Timpa fungsi load_data bawaan server agar tidak lagi mencari file Calculator Promo.xlsx
+calculator_promo_server.load_data = load_data_from_json
 
-data = load_data()
-with open(os.path.join(PUBLIC_DIR, 'data.json'), 'w', encoding='utf-8') as f:
-    json.dump(data, f, ensure_ascii=False, separators=(',', ':'))
-shutil.copy2(os.path.join(BASE_DIR, 'index.html'), os.path.join(PUBLIC_DIR, 'index.html'))
-for name in ['README-NETLIFY.txt']:
-    src = os.path.join(BASE_DIR, name)
-    if os.path.exists(src): shutil.copy2(src, os.path.join(PUBLIC_DIR, name))
-print('Static build ready:', PUBLIC_DIR)
-print('Products:', sum(len(v) for v in data['catalog'].values()))
-print('Card options:', len(data['card_options']))
+def main():
+    print("Membaca data dari data.json...")
+    data = load_data_from_json()
+    print(f"Berhasil memuat {len(data)} data promo.")
+
+    # Jalankan proses render HTML dari calculator_promo_server
+    if hasattr(calculator_promo_server, "generate_html"):
+        calculator_promo_server.generate_html(data)
+    elif hasattr(calculator_promo_server, "build_static"):
+        calculator_promo_server.build_static(data)
+    elif hasattr(calculator_promo_server, "render_index"):
+        html_content = calculator_promo_server.render_index(data)
+        os.makedirs("public", exist_ok=True)
+        with open("index.html", "w", encoding="utf-8") as f:
+            f.write(html_content)
+        with open("public/index.html", "w", encoding="utf-8") as f:
+            f.write(html_content)
+
+    print("Rebuild HTML selesai tanpa error!")
+
+if __name__ == "__main__":
+    main()
